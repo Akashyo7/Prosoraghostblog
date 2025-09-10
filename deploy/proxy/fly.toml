@@ -4,7 +4,7 @@ kill_signal = "SIGINT"
 kill_timeout = "5s"
 
 [build]
-  dockerfile = "deploy/proxy/Dockerfile"
+  dockerfile = "Dockerfile"
 
 [env]
   GHOST_HOST = "prosora-ghost.internal"
@@ -20,11 +20,11 @@ kill_timeout = "5s"
   min_machines_running = 1
 
   [[http_service.checks]]
-    interval = "15s"
+    interval = "10s"
     timeout = "2s"
     grace_period = "5s"
     method = "GET"
-    path = "/"
+    path = "/_health"
     protocol = "http"
 
   [http_service.concurrency]
