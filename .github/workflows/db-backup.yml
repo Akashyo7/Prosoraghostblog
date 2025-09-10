@@ -1,0 +1,76 @@
+name: DB Backup
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * *'  # daily at 03:00 UTC
+
+concurrency:
+  group: db-backup-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  backup-mysql:
+    name: Backup MySQL (prosora-mysql)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+      S3_BUCKET: ${{ secrets.S3_BUCKET }}
+      S3_PREFIX: ${{ secrets.S3_PREFIX }}
+    steps:
+      - name: Checkout (optional)
+        uses: actions/checkout@v4
+
+      - name: Setup flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@v1
+
+      - name: Install MySQL client and awscli
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mysql-client awscli
+
+      - name: Ensure MYSQL_PASSWORD is available
+        shell: bash
+        run: |
+          if [ -z "${MYSQL_PASSWORD}" ]; then
+            echo "MYSQL_PASSWORD is not set in GitHub Secrets. Skipping backup." >&2
+            echo "Set MYSQL_PASSWORD to the same value used in Fly secrets for prosora-mysql." >&2
+            exit 78  # neutral
+          fi
+
+      - name: Start Fly proxy to MySQL (background)
+        run: |
+          nohup bash -c 'flyctl proxy 3307:3306 -a prosora-mysql' >/tmp/fly-proxy.log 2>&1 &
+          for i in {1..30}; do nc -z 127.0.0.1 3307 && break || sleep 1; done
+
+      - name: Dump and compress database
+        id: dump
+        shell: bash
+        run: |
+          TS=$(date -u +%F_%H%M%S)
+          OUT="ghost_backup_${TS}.sql.gz"
+          mysqldump -h 127.0.0.1 -P 3307 -u ghost -p"${MYSQL_PASSWORD}" \
+            --single-transaction --quick --lock-tables=false ghost | gzip > "$OUT"
+          echo "file=$OUT" >> $GITHUB_OUTPUT
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mysql-backup-${{ steps.dump.outputs.file }}
+          path: ${{ steps.dump.outputs.file }}
+          retention-days: 30
+
+      - name: Upload to S3 (optional)
+        if: env.S3_BUCKET != ''
+        run: |
+          aws s3 cp "${{ steps.dump.outputs.file }}" "s3://${S3_BUCKET}/${S3_PREFIX:-backups}/" --only-show-errors || true
+
+      - name: Show proxy log (debug)
+        if: failure()
+        run: |
+          tail -n +1 /tmp/fly-proxy.log || true

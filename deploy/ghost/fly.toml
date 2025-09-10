@@ -28,12 +28,14 @@ kill_timeout = "5s"
   # database__connection__password will be injected via secrets
 
   # Optional mail config (uncomment and set via secrets if needed)
-  # mail__transport = "SMTP"
-  # mail__options__service = "Mailgun"
-  # mail__options__host = "smtp.mailgun.org"
-  # mail__options__port = "587"
-  # mail__options__auth__user = "postmaster@mg.prosora.com"
-  # mail__options__auth__pass will be injected via secrets
+  # Mail (SMTP) config
+  mail__transport = "SMTP"
+  mail__options__service = "Mailgun"
+  mail__options__host = "smtp.mailgun.org"
+  mail__options__port = "587"
+  mail__options__secure = false
+  mail__options__auth__user = "postmaster@mg.prosora.com"
+  # mail__options__auth__pass will be injected via Fly secrets
 
   # Tinybird analytics (set tokens via Fly secrets)
   # TINYBIRD_WORKSPACE_ID = "your-workspace-id"
