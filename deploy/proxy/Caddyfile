@@ -8,8 +8,10 @@
 :80 {
   encode zstd gzip
 
-  # Health endpoint for Fly checks
-  respond /_health 200
+  # Health endpoint for Fly checks (must be handled before other routes)
+  handle_path /_health* {
+    respond "ok" 200
+  }
 
   @apRoutes {
     path /.well-known/webfinger
