@@ -19,6 +19,9 @@ kill_timeout = "5s"
   database__connection__host = "prosora-mysql.internal"
   database__connection__user = "ghost"
   database__connection__database = "ghost"
+  database__connection__port = 3306
+  database__connection__allowPublicKeyRetrieval = true
+  database__connection__ssl__rejectUnauthorized = false
   # database__connection__password will be injected via secrets
 
   # Optional mail config (uncomment and set via secrets if needed)

@@ -11,6 +11,8 @@ kill_timeout = "5s"
   MYSQL_USER = "ghost"
   # MYSQL_PASSWORD will be set via secrets
   # MYSQL_ROOT_PASSWORD will be set via secrets
+  MYSQLD_EXTRA_FLAGS = "--bind-address=::"
+
 
 [[mounts]]
   source = "mysql_data"
@@ -26,6 +28,6 @@ kill_timeout = "5s"
     soft_limit = 50
 
 [[vm]]
-  memory = "512mb"
+  memory = "1024mb"
   cpu_kind = "shared"
   cpus = 1

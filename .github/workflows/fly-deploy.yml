@@ -1,0 +1,63 @@
+name: Fly Deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+    paths:
+      - 'deploy/mysql/**'
+      - 'deploy/ghost/**'
+      - 'deploy/proxy/**'
+      - '.github/workflows/fly-deploy.yml'
+
+concurrency:
+  group: fly-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy-mysql:
+    name: Deploy MySQL
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@v1
+      - name: Deploy prosora-mysql
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          flyctl deploy -a prosora-mysql -c deploy/mysql/fly.toml --remote-only
+
+  deploy-ghost:
+    name: Deploy Ghost
+    needs: deploy-mysql
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@v1
+      - name: Deploy prosora-ghost
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          flyctl deploy -a prosora-ghost -c deploy/ghost/fly.toml --remote-only
+
+  deploy-proxy:
+    name: Deploy Proxy (Caddy)
+    needs: deploy-ghost
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@v1
+      - name: Deploy prosora-proxy
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          flyctl deploy -a prosora-proxy -c deploy/proxy/fly.toml --remote-only
