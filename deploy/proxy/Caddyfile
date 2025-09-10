@@ -1,0 +1,47 @@
+# Common settings
+{
+  # For production, set a real email for ACME
+  email admin@prosora.com
+}
+
+# Development fallback for any host on :80 (works with localhost:8080)
+:80 {
+  encode zstd gzip
+
+  @apRoutes {
+    path /.well-known/webfinger
+    path /.well-known/nodeinfo
+    path /.ghost/activitypub/*
+  }
+  handle @apRoutes {
+    reverse_proxy {$ACTIVITYPUB_HOST}:{$ACTIVITYPUB_PORT}
+  }
+
+  handle {
+    reverse_proxy {$GHOST_HOST}:{$GHOST_PORT}
+  }
+}
+
+# Production site domains
+www.prosora.com, prosora.com {
+  encode zstd gzip
+
+  @apRoutes {
+    path /.well-known/webfinger
+    path /.well-known/nodeinfo
+    path /.ghost/activitypub/*
+  }
+  handle @apRoutes {
+    reverse_proxy {$ACTIVITYPUB_HOST}:{$ACTIVITYPUB_PORT}
+  }
+
+  handle {
+    reverse_proxy {$GHOST_HOST}:{$GHOST_PORT}
+  }
+}
+
+# Optional separate admin domain
+admin.prosora.com {
+  encode zstd gzip
+  reverse_proxy {$GHOST_HOST}:{$GHOST_PORT}
+}

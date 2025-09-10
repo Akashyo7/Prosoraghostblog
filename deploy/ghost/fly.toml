@@ -1,0 +1,53 @@
+app = "prosora-ghost"
+primary_region = "iad"
+kill_signal = "SIGINT"
+kill_timeout = "5s"
+
+[build]
+  image = "ghost:6-alpine"
+
+[env]
+  # Public site URL
+  url = "https://www.prosora.com"
+  # Optional separate admin URL
+  admin__url = "https://admin.prosora.com"
+  server__host = "::"
+  server__port = "2368"
+
+  # Database (set the password via Fly secrets)
+  database__client = "mysql"
+  database__connection__host = "prosora-mysql.internal"
+  database__connection__user = "ghost"
+  database__connection__database = "ghost"
+  # database__connection__password will be injected via secrets
+
+  # Optional mail config (uncomment and set via secrets if needed)
+  # mail__transport = "SMTP"
+  # mail__options__service = "Mailgun"
+  # mail__options__host = "smtp.mailgun.org"
+  # mail__options__port = "587"
+  # mail__options__auth__user = "postmaster@mg.prosora.com"
+  # mail__options__auth__pass will be injected via secrets
+
+  # Tinybird analytics (set tokens via Fly secrets)
+  # TINYBIRD_WORKSPACE_ID = "your-workspace-id"
+  # TINYBIRD_TRACKER_TOKEN will be injected via secrets
+  # TINYBIRD_ADMIN_TOKEN will be injected via secrets
+
+[[mounts]]
+  source = "ghost_data"
+  destination = "/var/lib/ghost/content"
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 2368
+  processes = ["app"]
+  [services.concurrency]
+    type = "connections"
+    soft_limit = 50
+    hard_limit = 100
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1

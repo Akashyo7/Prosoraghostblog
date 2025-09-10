@@ -1,0 +1,31 @@
+app = "prosora-mysql"
+primary_region = "iad"
+kill_signal = "SIGINT"
+kill_timeout = "5s"
+
+[build]
+  image = "mysql:8.4"
+
+[env]
+  MYSQL_DATABASE = "ghost"
+  MYSQL_USER = "ghost"
+  # MYSQL_PASSWORD will be set via secrets
+  # MYSQL_ROOT_PASSWORD will be set via secrets
+
+[[mounts]]
+  source = "mysql_data"
+  destination = "/var/lib/mysql"
+
+[[services]]
+  internal_port = 3306
+  processes = ["app"]
+  protocol = "tcp"
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 100
+    soft_limit = 50
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1

@@ -1,0 +1,34 @@
+app = "prosora-activitypub"
+primary_region = "iad"
+kill_signal = "SIGINT"
+kill_timeout = "5s"
+
+# If TryGhost publishes a container, set here; otherwise, build from source later
+[build]
+  image = "ghcr.io/tryghost/activitypub:latest"
+
+[env]
+  # Ghost base URL (must match Ghost's configured url)
+  SITE_URL = "https://www.prosora.com"
+  # Ghost API and Admin URLs (if required by ActivityPub service)
+  GHOST_URL = "https://www.prosora.com"
+  GHOST_ADMIN_URL = "https://admin.prosora.com"
+
+  # Bind for internal access only
+  PORT = "3000"
+  HOST = "::"
+
+[[services]]
+  internal_port = 3000
+  processes = ["app"]
+  protocol = "tcp"
+
+  [services.concurrency]
+    type = "connections"
+    soft_limit = 50
+    hard_limit = 100
+
+[[vm]]
+  memory = "256mb"
+  cpu_kind = "shared"
+  cpus = 1
