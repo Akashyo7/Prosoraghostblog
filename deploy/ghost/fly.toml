@@ -13,6 +13,9 @@ kill_timeout = "5s"
   admin__url = "https://admin.prosora.com"
   server__host = "::"
   server__port = "2368"
+  # healthcheck tuning
+  healthcheck__url = "/ghost/api/admin/site/" # lightweight endpoint
+  healthcheck__interval = "10s"
 
   # Database (set the password via Fly secrets)
   database__client = "mysql"

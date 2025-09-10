@@ -45,3 +45,8 @@ admin.prosora.com {
   encode zstd gzip
   reverse_proxy {$GHOST_HOST}:{$GHOST_PORT}
 }
+
+# ActivityPub service (internal)
+ap.prosora.com {
+  reverse_proxy prosora-activitypub.internal:3000
+}
